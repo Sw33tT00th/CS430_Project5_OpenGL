@@ -1,7 +1,7 @@
 #include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
 
-//#include "../deps/linmath.h"
+#include "linmath.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +18,8 @@ typedef struct {
 Vertex vertexes[] = {
   {{1, -1}, {0.99999, 0}},
   {{1, 1},  {0.99999, 0.99999}},
-  {{-1, 1}, {0, 0.99999}}
+  {{-1, 1}, {0, 0.99999}},
+  {{-1, -1}, {0, 0}}
 };
 
 static const char* vertex_shader_text =
@@ -54,14 +55,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 void glCompileShaderOrDie(GLuint shader) {
   GLint compiled;
   glCompileShader(shader);
-  glGetShaderiv(shader,
-		GL_COMPILE_STATUS,
-		&compiled);
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
   if (!compiled) {
     GLint infoLen = 0;
-    glGetShaderiv(shader,
-		  GL_INFO_LOG_LENGTH,
-		  &infoLen);
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
     char* info = malloc(infoLen+1);
     GLint done;
     glGetShaderInfoLog(shader, infoLen, &done, info);
@@ -153,20 +150,10 @@ int main(void)
     assert(tex_location != -1);
 
     glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location,
-			  2,
-			  GL_FLOAT,
-			  GL_FALSE,
-                          sizeof(Vertex),
-			  (void*) 0);
+    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) 0);
 
     glEnableVertexAttribArray(texcoord_location);
-    glVertexAttribPointer(texcoord_location,
-			  2,
-			  GL_FLOAT,
-			  GL_FALSE,
-                          sizeof(Vertex),
-			  (void*) (sizeof(float) * 2));
+    glVertexAttribPointer(texcoord_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (sizeof(float) * 2));
     
     int image_width = 4;
     int image_height = 4;
@@ -177,8 +164,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, 
-		 GL_UNSIGNED_BYTE, image);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texID);
@@ -188,7 +174,7 @@ int main(void)
     {
         float ratio;
         int width, height;
-        //mat4x4 m, p, mvp;
+        mat4x4 m, p, mvp;
 
         glfwGetFramebufferSize(window, &width, &height);
         ratio = width / (float) height;
@@ -196,13 +182,12 @@ int main(void)
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //mat4x4_identity(m);
-        //mat4x4_rotate_Z(m, m, (float) glfwGetTime());
-        //mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        //mat4x4_mul(mvp, p, m);
+        mat4x4_identity(m);
+        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+        mat4x4_mul(mvp, p, m);
 
         glUseProgram(program);
-        //glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
