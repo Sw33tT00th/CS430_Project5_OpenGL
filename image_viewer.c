@@ -142,9 +142,17 @@ void glCompileShaderOrDie(GLuint shader) {
   }
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
-  FILE *image_file = fopen("out.ppm", "r");
+  char* file_name = malloc(sizeof(char) * 80);
+  if(argc == 2) {
+    file_name = argv[1];
+  }
+  else {
+    file_name = "out.ppm";
+  }
+  
+  FILE *image_file = fopen(file_name, "r");
   Header image_header;
   if (read_header(image_file, &image_header)) { exit(1); }
 
@@ -152,7 +160,7 @@ int main(void)
   int image_size = image_header.height * image_header.width;
   Pixel *body_content = malloc(sizeof(Pixel) * image_size);
 
-  if (read_p6("out.ppm", image_file, image_header, body_content)) {
+  if (read_p6(file_name, image_file, image_header, body_content)) {
     exit(1);
   }
 
